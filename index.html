@@ -1,6 +1,542 @@
 <!DOCTYPE html>
 <html lang="es">
-<head><meta charset="UTF-8"><title>Calculadora Viabilidad</title></head>
-<body><h1>Calculadora de Viabilidad Hipotecaria</h1>
-<p>El archivo final incluirá el código completo que te pasé en el mensaje anterior. Sustituye este placeholder si quieres.</p>
-</body></html>
+<head>
+  <meta charset="UTF-8" />
+  <title>Calculadora de Viabilidad Hipotecaria · LF</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <!-- Chart.js para el gráfico -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- jsPDF para el PDF -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+  <style>
+    :root {
+      --brand: #1b3b2f;
+      --bg: #f5f5f5;
+      --card-bg: #ffffff;
+    }
+    * {
+      box-sizing: border-box;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    body {
+      margin: 0;
+      padding: 0;
+      background: var(--bg);
+      color: #222;
+    }
+    header {
+      background: #ffffff;
+      border-bottom: 1px solid #ddd;
+      padding: 1rem 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    header h1 {
+      margin: 0;
+      font-size: 1.4rem;
+      color: var(--brand);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    header span.brand {
+      font-weight: 700;
+      letter-spacing: 0.04em;
+    }
+    header p {
+      margin: 0;
+      font-size: 0.85rem;
+      color: #555;
+    }
+    main {
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      gap: 1rem;
+      padding: 1rem 1.5rem 2rem;
+    }
+    @media (max-width: 900px) {
+      main {
+        grid-template-columns: 1fr;
+      }
+    }
+    .card {
+      background: var(--card-bg);
+      border-radius: 12px;
+      padding: 1rem 1.2rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+      border: 1px solid #e4e4e4;
+      margin-bottom: 1rem;
+    }
+    .sidebar-title {
+      font-weight: 600;
+      margin-bottom: 0.75rem;
+      color: var(--brand);
+    }
+    label {
+      font-size: 0.85rem;
+      display: block;
+      margin-bottom: 0.25rem;
+      color: #444;
+    }
+    input {
+      width: 100%;
+      padding: 0.35rem 0.5rem;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      font-size: 0.9rem;
+      margin-bottom: 0.6rem;
+    }
+    input:focus {
+      outline: 2px solid rgba(27, 59, 47, 0.2);
+      border-color: var(--brand);
+    }
+    .checkbox-row {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      margin-top: 0.4rem;
+      font-size: 0.85rem;
+    }
+    button {
+      border-radius: 999px;
+      border: none;
+      padding: 0.45rem 0.9rem;
+      font-size: 0.9rem;
+      cursor: pointer;
+      background: var(--brand);
+      color: white;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    button.secondary {
+      background: #ececec;
+      color: #222;
+    }
+    button:active {
+      transform: scale(0.98);
+    }
+    .btn-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-top: 0.5rem;
+      margin-bottom: 0.5rem;
+    }
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 0.75rem;
+      margin-bottom: 0.75rem;
+    }
+    @media (max-width: 1000px) {
+      .metrics {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+    .metric {
+      background: #fafafa;
+      border-radius: 10px;
+      padding: 0.6rem 0.7rem;
+      border: 1px solid #eee;
+    }
+    .metric-label {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      color: #777;
+      margin-bottom: 0.15rem;
+    }
+    .metric-value {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--brand);
+    }
+    h2 {
+      margin-top: 0;
+      margin-bottom: 0.5rem;
+      font-size: 1.1rem;
+      color: var(--brand);
+    }
+    .info {
+      font-size: 0.8rem;
+      color: #555;
+      margin-top: 0.6rem;
+      padding: 0.6rem 0.8rem;
+      background: #f7f7f7;
+      border-radius: 8px;
+      border: 1px solid #e4e4e4;
+    }
+    .badge {
+      display: inline-block;
+      padding: 0.1rem 0.45rem;
+      border-radius: 999px;
+      font-size: 0.7rem;
+      background: #e6f4ea;
+      color: var(--brand);
+      margin-left: 0.3rem;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <h1>✅ Calculadora de Viabilidad Hipotecaria · <span class="brand">LF</span></h1>
+      <p>Estima la cuota máxima razonable y el importe de hipoteca según tus ingresos y deudas.</p>
+    </div>
+  </header>
+
+  <main>
+    <!-- SIDEBAR -->
+    <section>
+      <div class="card">
+        <div class="sidebar-title">Datos financieros</div>
+
+        <label for="ingresos">Ingresos NETOS mensuales (€)</label>
+        <input type="number" id="ingresos" value="2500" min="0" step="100" />
+
+        <label for="gastosFijos">Gastos fijos mensuales (no deudas) (€)</label>
+        <input type="number" id="gastosFijos" value="600" min="0" step="50" />
+
+        <label for="deudasMensuales">Pagos mensuales por deudas (€)</label>
+        <input type="number" id="deudasMensuales" value="200" min="0" step="50" />
+      </div>
+
+      <div class="card">
+        <div class="sidebar-title">Hipoteca objetivo</div>
+
+        <label for="ratioEsfuerzo">Ratio de esfuerzo sobre ingresos (%)</label>
+        <input type="number" id="ratioEsfuerzo" value="35" min="20" max="45" step="1" />
+
+        <label for="interesAnual">Tipo de interés anual (%)</label>
+        <input type="number" id="interesAnual" value="3.25" min="0" step="0.05" />
+
+        <label for="plazoAnios">Plazo (años)</label>
+        <input type="number" id="plazoAnios" value="30" min="1" max="40" step="1" />
+
+        <label for="entradaPct">Ahorro / Entrada (%)</label>
+        <input type="number" id="entradaPct" value="20" min="0" max="80" step="1" />
+
+        <div class="checkbox-row">
+          <input type="checkbox" id="stress" checked />
+          <label for="stress" style="margin: 0;">Añadir prueba de estrés (+2% interés)</label>
+        </div>
+
+        <div class="btn-row">
+          <button id="btnCalcular">Calcular viabilidad</button>
+          <button class="secondary" id="btnReset">Reiniciar</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- CONTENIDO PRINCIPAL -->
+    <section>
+      <div class="card" id="resumenCard">
+        <h2>Resumen de viabilidad</h2>
+
+        <div class="metrics">
+          <div class="metric">
+            <div class="metric-label">Ingresos netos</div>
+            <div class="metric-value" id="mIngresos">-</div>
+          </div>
+          <div class="metric">
+            <div class="metric-label">Deudas mensuales</div>
+            <div class="metric-value" id="mDeudas">-</div>
+          </div>
+          <div class="metric">
+            <div class="metric-label">Cuota máx. por ratio</div>
+            <div class="metric-value" id="mCuotaMaxRatio">-</div>
+          </div>
+          <div class="metric">
+            <div class="metric-label">Cuota disponible (tras deudas)</div>
+            <div class="metric-value" id="mCuotaDisponible">-</div>
+          </div>
+        </div>
+
+        <div class="metrics">
+          <div class="metric">
+            <div class="metric-label">Cuota sugerida</div>
+            <div class="metric-value" id="mCuotaSugerida">-</div>
+          </div>
+          <div class="metric">
+            <div class="metric-label">Hipoteca sugerida</div>
+            <div class="metric-value" id="mHipotecaSugerida">-</div>
+          </div>
+          <div class="metric">
+            <div class="metric-label">Precio vivienda sugerido</div>
+            <div class="metric-value" id="mPrecioSugerido">-</div>
+          </div>
+          <div class="metric">
+            <div class="metric-label">Prueba de estrés</div>
+            <div class="metric-value" id="mStress">-</div>
+          </div>
+        </div>
+
+        <div class="btn-row">
+          <button id="btnPDF">📄 Descargar PDF resumen</button>
+        </div>
+
+        <div class="info">
+          Esta calculadora es orientativa y no sustituye una evaluación formal de riesgo ni una oferta vinculante de entidad bancaria.
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Visualización</h2>
+        <p><strong>Evolución de la cuota según interés</strong> <span class="badge">Principal sugerido</span></p>
+        <canvas id="chartCuotaInteres"></canvas>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    // ===== Utilidades de formato =====
+    const fmtCurrency = (v) =>
+      new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(v || 0);
+
+    const fmtNumber1 = (v) =>
+      new Intl.NumberFormat("es-ES", { maximumFractionDigits: 1 }).format(v || 0);
+
+    // ===== Funciones financieras =====
+    function cuotaToPrincipal(cuota, r, n) {
+      if (n <= 0) return 0;
+      if (r === 0) return cuota * n;
+      return cuota * (1 - Math.pow(1 + r, -n)) / r;
+    }
+
+    function principalToCuota(L, r, n) {
+      if (n <= 0) return 0;
+      if (r === 0) return L / n;
+      return L * r / (1 - Math.pow(1 + r, -n));
+    }
+
+    // linspace simple (como numpy)
+    function linspace(start, end, num) {
+      const arr = [];
+      if (num <= 1) {
+        arr.push(start);
+        return arr;
+      }
+      const step = (end - start) / (num - 1);
+      for (let i = 0; i < num; i++) {
+        arr.push(start + step * i);
+      }
+      return arr;
+    }
+
+    // ===== Estado global =====
+    let chartCuota = null;
+    let resumenActual = null;
+
+    // ===== Render resumen en la UI =====
+    function renderResumen(r) {
+      document.getElementById("mIngresos").textContent = fmtCurrency(r.ingresos);
+      document.getElementById("mDeudas").textContent = fmtCurrency(r.deudasMensuales);
+      document.getElementById("mCuotaMaxRatio").textContent = fmtCurrency(r.cuotaMaxRatio);
+      document.getElementById("mCuotaDisponible").textContent = fmtCurrency(r.cuotaMaxReal);
+
+      document.getElementById("mCuotaSugerida").textContent = fmtCurrency(r.cuotaSugerida);
+      document.getElementById("mHipotecaSugerida").textContent = fmtCurrency(r.principalSugerido);
+      document.getElementById("mPrecioSugerido").textContent = fmtCurrency(r.precioSugerido);
+
+      if (r.stress && r.cuotaStress !== null) {
+        document.getElementById("mStress").textContent =
+          fmtCurrency(r.cuotaStress) + " (+2% interés)";
+      } else {
+        document.getElementById("mStress").textContent = "-";
+      }
+    }
+
+    // ===== Render gráfico cuota vs interés =====
+    function renderGrafico(r) {
+      const ctx = document.getElementById("chartCuotaInteres").getContext("2d");
+
+      const interesBase = r.interesAnual;
+      const intereses = linspace(Math.max(interesBase - 2, 0.1), interesBase + 3, 25);
+
+      const cuotas = intereses.map(i => {
+        const rm = (i / 100) / 12;
+        return principalToCuota(r.principalSugerido, rm, r.n);
+      });
+
+      if (chartCuota) chartCuota.destroy();
+
+      chartCuota = new Chart(ctx, {
+        type: "line",
+        data: {
+          labels: intereses.map(v => fmtNumber1(v) + " %"),
+          datasets: [{
+            label: "Cuota mensual (€)",
+            data: cuotas,
+            borderWidth: 2,
+            fill: false
+          }]
+        },
+        options: {
+          responsive: true,
+          scales: {
+            y: {
+              ticks: {
+                callback: (value) => fmtCurrency(value)
+              }
+            }
+          }
+        }
+      });
+    }
+
+    // ===== Descargar PDF resumen =====
+    function descargarPDF() {
+      if (!resumenActual) {
+        alert("Primero calcula la viabilidad.");
+        return;
+      }
+
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+
+      let y = 15;
+      doc.setFont("Helvetica", "bold");
+      doc.setFontSize(14);
+      doc.setTextColor(27, 59, 47);
+      doc.text("Viabilidad Hipotecaria · LF", 15, y);
+
+      doc.setFont("Helvetica", "normal");
+      doc.setFontSize(10);
+      doc.setTextColor(0, 0, 0);
+      y += 8;
+
+      const r = resumenActual;
+
+      doc.text(
+        `Ingresos: ${fmtCurrency(r.ingresos)}  |  Deudas: ${fmtCurrency(r.deudasMensuales)}  |  Gastos: ${fmtCurrency(r.gastosFijos)}`,
+        15, y
+      );
+      y += 6;
+      doc.text(
+        `Ratio esfuerzo: ${r.ratioEsfuerzo}%  |  Interés: ${fmtNumber1(r.interesAnual)}%  |  Plazo: ${r.plazoAnios} años`,
+        15, y
+      );
+      y += 6;
+      doc.text(
+        `Cuota máx. por ratio: ${fmtCurrency(r.cuotaMaxRatio)}  |  Cuota disponible: ${fmtCurrency(r.cuotaMaxReal)}`,
+        15, y
+      );
+      y += 6;
+      doc.text(
+        `Cuota sugerida: ${fmtCurrency(r.cuotaSugerida)}  |  Hipoteca sugerida: ${fmtCurrency(r.principalSugerido)}`,
+        15, y
+      );
+      y += 6;
+      doc.text(
+        `Precio vivienda sugerido (con ${r.entradaPct}% entrada): ${fmtCurrency(r.precioSugerido)}`,
+        15, y
+      );
+      if (r.stress && r.cuotaStress !== null) {
+        y += 6;
+        doc.text(
+          `Prueba de estrés (+2% interés): cuota ≈ ${fmtCurrency(r.cuotaStress)}`,
+          15, y
+        );
+      }
+
+      y += 10;
+      if (y > 280) {
+        doc.addPage();
+        y = 15;
+      }
+      doc.setFontSize(8);
+      doc.setFont("Helvetica", "italic");
+      doc.text(
+        "Documento orientativo. No sustituye evaluación de riesgo ni oferta vinculante.",
+        15, y
+      );
+
+      doc.save("viabilidad_hipotecaria.pdf");
+    }
+
+    // ===== Lógica principal al pulsar Calcular =====
+    document.getElementById("btnCalcular").addEventListener("click", () => {
+      const ingresos = parseFloat(document.getElementById("ingresos").value) || 0;
+      const gastosFijos = parseFloat(document.getElementById("gastosFijos").value) || 0;
+      const deudasMensuales = parseFloat(document.getElementById("deudasMensuales").value) || 0;
+
+      const ratioEsfuerzo = parseFloat(document.getElementById("ratioEsfuerzo").value) || 0;
+      const interesAnual = parseFloat(document.getElementById("interesAnual").value) || 0;
+      const plazoAnios = parseInt(document.getElementById("plazoAnios").value) || 0;
+      const entradaPct = parseFloat(document.getElementById("entradaPct").value) || 0;
+      const stress = document.getElementById("stress").checked;
+
+      const n = plazoAnios * 12;
+      const r = (interesAnual / 100) / 12;
+
+      const cuotaMaxRatio = ingresos * (ratioEsfuerzo / 100);
+      const cuotaMaxReal = Math.max(cuotaMaxRatio - deudasMensuales, 0);
+
+      const cuotaSugerida = Math.max(cuotaMaxReal - Math.max(gastosFijos * 0.25, 0), 0);
+
+      const principalMax = cuotaToPrincipal(cuotaMaxReal, r, n);
+      const principalSugerido = cuotaToPrincipal(cuotaSugerida, r, n);
+
+      const factor = (1 - entradaPct / 100);
+      const precioMax = factor > 0 ? principalMax / factor : principalMax;
+      const precioSugerido = factor > 0 ? principalSugerido / factor : principalSugerido;
+
+      let cuotaStress = null;
+      if (stress) {
+        const rStress = ((interesAnual + 2) / 100) / 12;
+        cuotaStress = principalToCuota(principalSugerido, rStress, n);
+      }
+
+      resumenActual = {
+        ingresos,
+        gastosFijos,
+        deudasMensuales,
+        ratioEsfuerzo,
+        interesAnual,
+        plazoAnios,
+        entradaPct,
+        n,
+        cuotaMaxRatio,
+        cuotaMaxReal,
+        cuotaSugerida,
+        principalMax,
+        principalSugerido,
+        precioMax,
+        precioSugerido,
+        stress,
+        cuotaStress
+      };
+
+      renderResumen(resumenActual);
+      renderGrafico(resumenActual);
+
+      // Scroll al resumen en móvil
+      document.getElementById("resumenCard").scrollIntoView({ behavior: "smooth" });
+    });
+
+    // ===== Reset =====
+    document.getElementById("btnReset").addEventListener("click", () => {
+      document.getElementById("ingresos").value = 2500;
+      document.getElementById("gastosFijos").value = 600;
+      document.getElementById("deudasMensuales").value = 200;
+      document.getElementById("ratioEsfuerzo").value = 35;
+      document.getElementById("interesAnual").value = 3.25;
+      document.getElementById("plazoAnios").value = 30;
+      document.getElementById("entradaPct").value = 20;
+      document.getElementById("stress").checked = true;
+
+      resumenActual = null;
+      if (chartCuota) chartCuota.destroy();
+      document.querySelectorAll(".metric-value").forEach(el => el.textContent = "-");
+    });
+
+    // ===== Botón PDF =====
+    document.getElementById("btnPDF").addEventListener("click", descargarPDF);
+  </script>
+</body>
+</html>
